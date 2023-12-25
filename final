@@ -1,0 +1,180 @@
+from tkinter import *
+from tkinter import ttk, messagebox, filedialog
+from googletrans import Translator,LANGUAGES
+import pytesseract as tess
+tess.pytesseract.tesseract_cmd = r'C:\Users\dohai\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+from PIL import Image
+from tkinter import PhotoImage
+import speech_recognition as sr
+
+
+import textblob
+
+root=Tk()
+root.title("Google Translator")
+root.geometry("1080x500")
+is_listening = False
+def recognize_speech():
+    global is_listening  # Sử dụng biến cờ toàn cục
+
+    language = "en-US"  # Mặc định là tiếng Anh
+    selected_language = combo1.get()
+
+    if selected_language == "vietnamese":
+        language = "vi-VN"
+    elif selected_language == "chinese (simplified)":
+        language = "zh-CN"  # Tiếng Trung
+    elif selected_language == "japanese":
+        language = "ja-JP"  # Tiếng Nhật
+    elif selected_language == "korean":
+        language = "ko-KR"  # Tiếng Hàn
+
+    if not is_listening:  # Kiểm tra xem có đang nhận diện giọng nói không
+        is_listening = True
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            print("Say something...")
+            audio = recognizer.listen(source)
+
+        try:
+            recognized_text = recognizer.recognize_google(audio, language=language)
+            text1.delete(1.0, END)
+            text1.insert(END, recognized_text)
+        except sr.UnknownValueError:
+            print("Could not understand audio")
+        except sr.RequestError as e:
+            print(f"Error: {e}")
+
+        is_listening = False
+def label_change():
+    c=combo1.get()
+    c1=combo2.get()
+    label1.configure(text=c)
+    label2.configure(text=c1)
+    root.after(1000,label_change)
+def translate_now():
+    text_ = text1.get(1.0, END).strip()  # Lấy văn bản và loại bỏ khoảng trắng ở đầu cuối
+    if text_:  # Kiểm tra xem text_ có rỗng không
+        t1 = Translator()
+        trans_text = t1.translate(text_, src=combo1.get(), dest=combo2.get())
+        trans_text = trans_text.text
+
+        text2.delete(1.0, END)
+        text2.insert(END, trans_text)
+    else:
+        messagebox.showwarning("Warning", "Please enter text to translate.")
+def filter_languages(event=None):
+    keyword = search_entry.get().lower()
+    filtered_languages = [lang for lang in languageV if keyword in lang.lower()]
+    combo1['values'] = filtered_languages
+def filter_languages2(event=None):
+    keyword = search_entry2.get().lower()
+    filtered_languages = [lang for lang in languageV if keyword in lang.lower()]
+    combo2['values'] = filtered_languages
+
+
+def open_image():
+    file_path = filedialog.askopenfilename()
+    selected_language = combo1.get()  # Lấy giá trị ngôn ngữ từ combo box
+
+    if file_path:
+        img = Image.open(file_path)
+        if selected_language == "english":
+            text = tess.image_to_string(img, lang='eng')  # Sử dụng 'eng' cho tiếng Anh
+        elif selected_language == "vietnamese":
+            text = tess.image_to_string(img, lang='vie')  # Sử dụng 'vie' cho tiếng Việt
+        elif selected_language == "korean":
+            text = tess.image_to_string(img, lang='kor')  # Sử dụng 'kor' cho tiếng Hàn
+        elif selected_language == "chinese (simplified)":
+            text = tess.image_to_string(img, lang='chi_sim')  # Sử dụng 'chi_sim' cho tiếng Trung (giản thể)
+        elif selected_language == "japanese":
+            text = tess.image_to_string(img, lang='jpn')  # Sử dụng 'jpn' cho tiếng Nhật
+        else:
+            text = "Invalid language selection"
+
+        text1.delete(1.0, END)
+        text1.insert(END, text)
+root.title("TRANSLATE")
+button = Button(root, text="Open Image", command=open_image)
+button.pack()
+
+#icon
+image_icon = PhotoImage(file="google.png.png")
+root.iconphoto(False,image_icon)
+#arrow
+arrow_image=PhotoImage(file="arrow.png")
+image_label=Label(root,image=arrow_image,width=150)
+image_label.place(x=460,y=50)
+search_entry = Entry(root, font="Roboto 12", width=27,bd=2)  # Điều chỉnh width tại đây
+search_entry.place(x=110, y=55)
+search_entry.bind('<KeyRelease>', filter_languages)
+search_entry2 = Entry(root, font="Roboto 12",width=27,bd=2)
+search_entry2.place(x=730, y=55)
+search_entry2.bind('<KeyRelease>', filter_languages2)
+
+
+language = LANGUAGES
+languageV = list(language.values())
+lang1 = language.keys()
+combo1 = ttk.Combobox(root,values=languageV,font="Roboto 14",state="r")
+combo1.place(x=110,y=20)
+combo1.set("english")
+
+label1= Label(root,text="ENGLISH",font="segoe 30 bold",bg ="white",width=18,bd=5,relief=GROOVE)
+label1.place(x=10,y=80)
+
+f = Frame(root,bg="black",bd=5)
+f.place(x=10,y=140,width=440,height=300)
+
+text1=Text(f,font="Robote 20",bg="white",relief=GROOVE,wrap=WORD)
+text1.place(x=0,y=0,width=430,height=200)
+scrollbar1 = Scrollbar(f)
+scrollbar1.pack(side="right",fill="y")
+scrollbar1.configure(command=text1.yview)
+text1.configure(yscrollcommand=scrollbar1.set)
+text1.pack()
+
+
+
+combo2 = ttk.Combobox(root,values=languageV,font="RobotV 14",state="r")
+combo2.place(x=730,y=20)
+combo2.set("VIETNAMESE")
+label2= Label(root,text="VIETNAMESE",font="segoe 30 bold",bg ="white",width=18,bd=5,relief=GROOVE)
+label2.place(x=620,y=80)
+
+f1 = Frame(root,bg="black",bd=5)
+f1.place(x=620,y=140,width=440,height=300)
+
+text2 = Text(f1, font="Robote 20", bg="white", relief=GROOVE, wrap=WORD)
+text2.place(x=0, y=0, width=420, height=290)  # Giữ nguyên kích thước của text box
+
+scrollbar2 = Scrollbar(f1)
+scrollbar2.pack(side="right", fill="y")
+scrollbar2.place()  # Đặt scrollbar sau text box
+
+scrollbar2.configure(command=text2.yview)
+text2.configure(yscrollcommand=scrollbar2.set)
+
+
+#translate button
+translate= Button(root,text="Translate",font="Roboto 15 bold italic",
+                  activebackground="purple",cursor="hand2",bd=1,
+                  bg='red',fg="white",command=translate_now)
+translate.place(x=480,y=250)
+speech_button = Button(root, text="Speech to Text", font="Roboto 15 bold italic",
+                       activebackground="purple", cursor="hand2", bd=1,
+                       bg='blue', fg="white", command=recognize_speech)
+speech_button.place(x=459, y=300)
+
+
+
+label_change()
+
+
+root.configure(bg="white")
+root.mainloop()
+
+
+
+
+
