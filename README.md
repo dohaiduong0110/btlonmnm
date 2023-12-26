@@ -4,7 +4,7 @@ PHÂN MỀM HỖ TRỢ DỊCH CÁC NGÔN NGỮ
 - Mã nguồn chuyển hình ảnh sang dạng văn bản đa ngôn ngữ: Pytesseract
 - link gitgub: https://github.com/tesseract-ocr/tesseract
 - Mã nguồn hỗ trợ chuyển đổi các văn bản dạng hình ảnh sang dạng văn bản đối với rất nhiều các loại ngôn ngữ khác nhau trên thế giới
-- Mã nguồn được thiết kế bằng ngôn ngữ java 
+- Mã nguồn được thiết kế bằng ngôn ngữ java , c++
 - Thuật toán sử dụng trong pytesseract:
 + OCR Engine: Sử dụng một cấu trúc mô hình LSTM (Long Short-Term Memory) cho việc nhận diện ký tự.
 + Quá trình Pre-processing: Các bước tiền xử lý hình ảnh để cải thiện chất lượng và chuẩn bị cho việc nhận diện văn bản.
