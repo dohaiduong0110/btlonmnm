@@ -2,10 +2,14 @@ from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from googletrans import Translator,LANGUAGES
 import pytesseract as tess
-tess.pytesseract.tesseract_cmd = r'C:\Users\dohai\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+tess.pytesseract.tesseract_cmd = r'C:\Users\QUANG\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+#tess.pytesseract.tesseract_cmd = r'C:\Users\dohai\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 from PIL import Image
 from tkinter import PhotoImage
 import speech_recognition as sr
+from tkinter import filedialog
+import docx
+import imghdr
 
 
 import textblob
@@ -46,23 +50,49 @@ def recognize_speech():
             print(f"Error: {e}")
 
         is_listening = False
+
+
 def label_change():
-    c=combo1.get()
-    c1=combo2.get()
+    c = combo1.get()
+    c1 = combo2.get()
     label1.configure(text=c)
     label2.configure(text=c1)
-    root.after(1000,label_change)
-def translate_now():
+
+    # Xử lý tự động chọn ngôn ngữ đích tương ứng khi người dùng chọn ngôn ngữ nguồn
+    if c == "vietnamese":
+        # Tự động chọn tiếng Anh khi người dùng chọn tiếng Việt
+        combo2.set("english")
+    elif c == "english":
+        # Tự động chọn tiếng Việt khi người dùng chọn tiếng Anh
+        combo2.set("vietnamese")
+    # Thêm các điều kiện tương tự cho các ngôn ngữ khác nếu cần
+
+    root.after(1000, label_change)
+def translate_now(event=None):
     text_ = text1.get(1.0, END).strip()  # Lấy văn bản và loại bỏ khoảng trắng ở đầu cuối
     if text_:  # Kiểm tra xem text_ có rỗng không
         t1 = Translator()
-        trans_text = t1.translate(text_, src=combo1.get(), dest=combo2.get())
+        trans_text = t1.translate(text_, src=combo1.get(), dest=combo2.get())  # Dịch từ tiếng Anh sang tiếng Việt
         trans_text = trans_text.text
 
         text2.delete(1.0, END)
         text2.insert(END, trans_text)
     else:
-        messagebox.showwarning("Warning", "Please enter text to translate.")
+        text2.delete(1.0, END)  # Clear text2 if text1 is empty
+    # else:
+    #     messagebox.showwarning("Warning", "Please enter text to translate.")
+
+# def translate_now():
+#     text_ = text1.get(1.0, END).strip()  # Lấy văn bản và loại bỏ khoảng trắng ở đầu cuối
+#     if text_:  # Kiểm tra xem text_ có rỗng không
+#         t1 = Translator()
+#         trans_text = t1.translate(text_, src=combo1.get(), dest=combo2.get())
+#         trans_text = trans_text.text
+#
+#         text2.delete(1.0, END)
+#         text2.insert(END, trans_text)
+#     else:
+#         messagebox.showwarning("Warning", "Please enter text to translate.")
 def filter_languages(event=None):
     keyword = search_entry.get().lower()
     filtered_languages = [lang for lang in languageV if keyword in lang.lower()]
@@ -73,38 +103,79 @@ def filter_languages2(event=None):
     combo2['values'] = filtered_languages
 
 
+def open_word_file():
+    file_path = filedialog.askopenfilename(filetypes=[("Word files", "*.docx")])
+
+    if file_path:
+        doc = docx.Document(file_path)
+        full_text = []
+        for para in doc.paragraphs:
+            full_text.append(para.text)
+
+        text = '\n'.join(full_text)
+
+        if text:
+            text1.delete(1.0, END)
+            text1.insert(END, text)
+        else:
+            messagebox.showinfo("Empty Document", "The selected Word document is empty.")
+
 def open_image():
     file_path = filedialog.askopenfilename()
     selected_language = combo1.get()  # Lấy giá trị ngôn ngữ từ combo box
 
     if file_path:
-        img = Image.open(file_path)
-        if selected_language == "english":
-            text = tess.image_to_string(img, lang='eng')  # Sử dụng 'eng' cho tiếng Anh
-        elif selected_language == "vietnamese":
-            text = tess.image_to_string(img, lang='vie')  # Sử dụng 'vie' cho tiếng Việt
-        elif selected_language == "korean":
-            text = tess.image_to_string(img, lang='kor')  # Sử dụng 'kor' cho tiếng Hàn
-        elif selected_language == "chinese (simplified)":
-            text = tess.image_to_string(img, lang='chi_sim')  # Sử dụng 'chi_sim' cho tiếng Trung (giản thể)
-        elif selected_language == "japanese":
-            text = tess.image_to_string(img, lang='jpn')  # Sử dụng 'jpn' cho tiếng Nhật
-        else:
-            text = "Invalid language selection"
+        image_type = imghdr.what(file_path)  # Kiểm tra loại tệp
 
-        text1.delete(1.0, END)
-        text1.insert(END, text)
+        if image_type:
+            img = Image.open(file_path)
+            # Xử lý hình ảnh với tesseract OCR ở đây
+            if selected_language == "english":
+                text = tess.image_to_string(img, lang='eng')  # Sử dụng 'eng' cho tiếng Anh
+            elif selected_language == "vietnamese":
+                text = tess.image_to_string(img, lang='vie')  # Sử dụng 'vie' cho tiếng Việt
+            elif selected_language == "korean":
+                text = tess.image_to_string(img, lang='kor')  # Sử dụng 'kor' cho tiếng Hàn
+            elif selected_language == "chinese (simplified)":
+                text = tess.image_to_string(img, lang='chi_sim')  # Sử dụng 'chi_sim' cho tiếng Trung (giản thể)
+            elif selected_language == "japanese":
+                text = tess.image_to_string(img, lang='jpn')  # Sử dụng 'jpn' cho tiếng Nhật
+            else:
+                text = "Invalid language selection"
+
+            if not text.strip():  # Kiểm tra xem có văn bản không
+                messagebox.showinfo("No Text", "There is no text in the image.")
+            else:
+                text1.delete(1.0, END)
+                text1.insert(END, text)
+        else:
+            messagebox.showwarning("Error", "The selected file is not an image.")
+    else:
+        messagebox.showwarning("Warning", "Please select an image.")
+def save_translation():
+    translated_text = text2.get(1.0, END).strip()  # Lấy văn bản dịch từ text2
+    if translated_text:
+        file_path = filedialog.asksaveasfilename(defaultextension=".txt",
+                                                 filetypes=[("Text files", "*.txt")])
+        if file_path:
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.write(translated_text)
+                messagebox.showinfo("Saved", "Translation saved successfully!")
+    else:
+        messagebox.showwarning("No Text", "There is no translated text to save.")
+
 root.title("TRANSLATE")
 button = Button(root, text="Open Image", command=open_image)
 button.pack()
+button.place(x=500, y=1)
 
 #icon
 image_icon = PhotoImage(file="google.png.png")
 root.iconphoto(False,image_icon)
 #arrow
-arrow_image=PhotoImage(file="arrow.png")
+arrow_image=PhotoImage(file="ar4.png")
 image_label=Label(root,image=arrow_image,width=150)
-image_label.place(x=460,y=50)
+image_label.place(x=460,y=140)
 search_entry = Entry(root, font="Roboto 12", width=27,bd=2)  # Điều chỉnh width tại đây
 search_entry.place(x=110, y=55)
 search_entry.bind('<KeyRelease>', filter_languages)
@@ -134,7 +205,7 @@ scrollbar1.configure(command=text1.yview)
 text1.configure(yscrollcommand=scrollbar1.set)
 text1.pack()
 
-
+text1.bind('<KeyRelease>', translate_now)
 
 combo2 = ttk.Combobox(root,values=languageV,font="RobotV 14",state="r")
 combo2.place(x=730,y=20)
@@ -157,6 +228,12 @@ text2.configure(yscrollcommand=scrollbar2.set)
 
 
 #translate button
+word_button = Button(root, text="Open Word File", command=open_word_file)
+word_button.pack()
+word_button.place(x=490, y=30)
+save_button = Button(root, text="Save Translation", command=save_translation)
+save_button.place(x=490, y=60)
+
 translate= Button(root,text="Translate",font="Roboto 15 bold italic",
                   activebackground="purple",cursor="hand2",bd=1,
                   bg='red',fg="white",command=translate_now)
@@ -170,7 +247,7 @@ speech_button.place(x=459, y=300)
 
 label_change()
 
-
+root.bind('<Control-s>', lambda event: save_translation())
 root.configure(bg="white")
 root.mainloop()
 
